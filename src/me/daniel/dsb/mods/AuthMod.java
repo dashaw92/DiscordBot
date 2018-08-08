@@ -35,8 +35,6 @@ public final class AuthMod extends Mod {
 			long userauth = Long.parseLong(args[0]);
 			BotData.authUser(userauth);
 		}
-
-		channel.sendMessage(":ok_hand:").queue();
 		return;
 	}
 	

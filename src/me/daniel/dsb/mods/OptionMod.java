@@ -33,7 +33,6 @@ public final class OptionMod extends Mod {
 			
 			BotData.CMD_CHAR = args[1];
 			BotData.save();
-			channel.sendMessage(":ok_hand:").queue();
 			break;
 		default:
 			channel.sendMessage("?").queue();

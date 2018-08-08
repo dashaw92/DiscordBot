@@ -1,0 +1,3 @@
+This is my Discord self bot.  
+I don't care enough to write a thorough, well documenting readme, so...  
+I guess read the code if you care? Otherwise bye \o  

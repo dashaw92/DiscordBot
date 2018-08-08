@@ -21,8 +21,7 @@ public class SaveMod extends Mod {
 			return;
 		}
 		
-		if(BotData.save()) channel.sendMessage(":ok_hand:").queue();
-		else channel.sendMessage("?");
+		if(!BotData.save()) channel.sendMessage("?");
 	}
 	
 }

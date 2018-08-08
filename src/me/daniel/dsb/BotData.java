@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,11 +18,45 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+
+import me.daniel.dsb.mods.Mod;
 
 /*
  * BotData contains all the main data about this bot at run time.
  * It manages the config files on start/shutdown.
+ * 
+ * The current structure of files is as follows:
+ * 
+ * ../
+ * ./
+ * 	<bot.jar>
+ * 	data/
+ * 		cfg.txt
+ * 		mods.txt
+ * 		delta.txt
+ * 		tags.dat
+ * 		mods/
+ * 
+ * data/ is the root folder for all config files for this bot.
+ * cfg.txt contains all the main configuration:
+ * 		Bot token, authorized user IDs, command prefix,
+ * 		owner user ID, and debug mode
+ * 
+ * mods.txt is a list of mods to disallow from loading.
+ * 		Mod names listed here will not be allowed to load.
+ * 
+ * delta.txt is used by DeltaMod to keep track of deltas in servers.
+ * 		Really, that's it lol. I should definitely put this in a
+ * 		plugin specific folder (config per plugin :O).
+ * 
+ * tags.dat is a Java object serialized to a file.
+ * 		It contains all the tags.
+ * 
+ * mods/
+ * 		Custom mods will go in here. Not currently implemented.
+ * 
  */
 public final class BotData {
 	
@@ -32,12 +68,27 @@ public final class BotData {
 	private static final File TRACKING = new File(ROOT.getAbsolutePath() + "/delta.txt");
 	//Tag database (Serialized instances of tags)
 	private static final File TAGDB = new File(ROOT.getAbsolutePath() + "/tags.dat");
+	//Mod folder
+	private static final File MODROOT = new File(ROOT.getAbsolutePath() + "/mods");
+	//Mods to disable
+	private static final File MODCFG = new File(ROOT.getAbsolutePath() + "/mods.txt");
+	
+	//Internal for initializing files. <File, Folder?>
+	private static Map<File, Boolean> files = new HashMap<>();
+	static {
+		files.put(ROOT, true);
+		files.put(CONFIG, false);
+		files.put(TRACKING, false);
+		files.put(TAGDB, false);
+		files.put(MODROOT, true);
+		files.put(MODCFG, false);
+	}
 	
 	//Main bot data
 	private static long OWNER_ID = 136651506098241536L; //The ID of the owner of this bot
 	public static String CMD_CHAR = "."; //The character used to prefix commands
 	public static boolean DEBUG = false; //Should any debug code run?
-	public static String TOKEN = ""; //The bot token
+	protected static String TOKEN = ""; //The bot token
 	private static final String DELIMITER = ":"; //What fields are delimited by in config files
 	
 	//Extra data
@@ -49,23 +100,20 @@ public final class BotData {
 	public static void init() {
 		System.out.println("\tBot data root: " + ROOT.getAbsolutePath());
 		
-		if(!ROOT.exists() || !CONFIG.exists() || !TRACKING.exists() || !TAGDB.exists()) {
-			String current = "Root folder";
+		for(File f : files.keySet()) {
+			if(f.exists()) continue;
 			try {
-				ROOT.mkdirs();
-				current = "Config file";
-				CONFIG.createNewFile();
-				current = "Tracking (δ) file";
-				TRACKING.createNewFile();
-				current = "Tag database";
-				TAGDB.createNewFile();
+				if(files.get(f)) f.mkdirs();
+				else f.createNewFile();
 			} catch(IOException e) {
-				System.err.println("\tCould not create data: " + current);
+				System.err.println("\tCould not create a data file.");
 			}
 		}
 		
 		try {
 			parseConfig();
+			parseMods();
+			findMods();
 			parseTracking();
 			readTags();
 		} catch(FileNotFoundException e) {
@@ -105,6 +153,58 @@ public final class BotData {
 			}
 		} catch (NumberFormatException e) {
 			System.err.println("\tLine " + index + ": Invalid numerical data encountered in main config.");
+		}
+	}
+	
+	//Parses the mod config.
+	//One entry per line. Every entry means "don't enable this plugin"
+	private static void parseMods() throws FileNotFoundException {
+		try(Scanner scanner = new Scanner(MODCFG)) {
+			while(scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				Mod.disabled.add(line.toLowerCase().trim());
+			}
+		}
+	}
+	
+	private static void findMods() throws FileNotFoundException {
+		Map<URL, String> mods = new HashMap<>();
+		for(File child : MODROOT.listFiles()) {
+			String path = "";
+			try(JarFile jar = new JarFile(child)) {
+				Scanner scanner = new Scanner(jar.getInputStream(jar.getEntry("info")));
+				while(scanner.hasNextLine()) {
+					String line = scanner.nextLine();
+					if(line.startsWith("main: ")) {
+						path = line.substring(6);
+					}
+				}
+				if(path.trim().isEmpty()) {
+					System.err.println("\tInvalid info in mod jar " + child.getName());
+					continue;
+				}
+				scanner.close();
+				mods.put(child.toURI().toURL(), path);
+			} catch(IOException e) {
+				System.err.println("\tMissing info file in " + child.getName() + ", skipping.");
+				continue;
+			}
+		}
+		
+		URL[] urls = mods.keySet().toArray(new URL[mods.keySet().size()]);
+		ClassLoader loader = URLClassLoader.newInstance(urls, BotData.class.getClassLoader());
+		for(String s : mods.values()) {
+			try {
+				Class<?> clazz = Class.forName(s, true, loader);
+				if(Mod.class.isAssignableFrom(clazz)) {
+					Mod mod = (Mod)clazz.getDeclaredConstructor().newInstance();
+					Mod.external.add(mod);
+				}
+			} catch (Exception e) {
+				System.err.println("\tError loading class in external mod: " + s);
+				e.printStackTrace();
+				continue;
+			}
 		}
 	}
 	

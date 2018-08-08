@@ -13,6 +13,40 @@ import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 
+/*
+ * Hello! This is my "self" bot for Discord. It actually
+ * is intended to run as a bot user because self bots are
+ * against the ToS currently.
+ * 
+ * Notice: This bot is not intended to be user friendly!
+ * I designed this in a way that makes sense to me, and
+ * if my design doesn't suit you, R.I.P. you! :)
+ * 
+ * Usage breakdown: (ListMod) <PREFIX>m[a|i<m>]
+ * Ignoring the prefix, this means the following:
+ * The command `m` takes the following OPTIONAL
+ * arguments: `a` and `i`.
+ * 
+ * The `a` argument takes no arguments, so to run it:
+ * <PREFIX>m a
+ * Which would show the list of all mods loaded with the
+ * author of each mod as well.
+ * 
+ * The `i` argument takes one required argument: `m`
+ * The `m` argument is a mod name, case-insensitive.
+ * <PREFIX>m i listmod
+ * Which will show information about ListMod.
+ * 
+ * TL;DR on usage information:
+ * !: This command is only operable by the bot owner.
+ * <PREFIX>: The character all commands are prefixed by
+ * [ and ]: Optional arguments
+ * |: Argument delimiter in usage. Not used in commands.
+ * < and >: Required arguments
+ * 
+ * This mod always keeps the HelpMod loaded, so if you
+ * are confused on what you can do, run `?` or `h`.
+ */
 public final class SelfBot implements EventListener {
 	
 	public static void main(String[] args) {
@@ -34,7 +68,8 @@ public final class SelfBot implements EventListener {
 			return;
 		}
 		
-		while(jda.getStatus() == Status.CONNECTED) {
+		while(jda.getStatus() != Status.SHUTDOWN && jda.getStatus() != Status.SHUTTING_DOWN) 
+		{
 			try {
 				Thread.sleep(10L);
 			} catch (InterruptedException e) {}
@@ -58,19 +93,24 @@ public final class SelfBot implements EventListener {
 				return;
 			}
 			
-			//Bot has recieved a command.
+			//Bot has received a command.
 			if(msg.startsWith(BotData.CMD_CHAR)) {
 				//Set up the parameters for the mod.
 				String[] args = ev.getMessage().getContentDisplay().split(" ");
 				String cmd = args[0].substring(BotData.CMD_CHAR.length());
+				
 				if(args.length < 1) {
 					args = new String[] { "" };
 				} else {
 					args = Arrays.copyOfRange(args, 1, args.length);
 				}
-				
+
 				Mod mod = Mod.getMod(cmd).orElse(null);
 				if(mod == null) return;
+				if(BotData.DEBUG) {
+					String format = String.format("[DEBUG] %s#%s ran command %s with args [%s]", ev.getAuthor().getName(), ev.getAuthor().getDiscriminator(), mod.name(), String.join(" ", args));
+					System.out.println(format);
+				}
 				mod.run(args, ev.getAuthor(), ev.getChannel());
 
 			}

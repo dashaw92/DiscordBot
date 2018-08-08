@@ -18,7 +18,7 @@ public final class ListMod extends Mod {
 	@Override
 	public void run(String[] args, User user, MessageChannel channel) {
 		//Display info about a specific mod
-		if(args.length > 1 && args[0].toLowerCase().charAt(0) == 'm') {
+		if(args.length > 1 && args[0].toLowerCase().charAt(0) == 'i') {
 			if(args.length < 2) {
 				channel.sendMessage("?").queue();
 				return;
@@ -28,7 +28,12 @@ public final class ListMod extends Mod {
 			String mod = args[1];
 			for(Mod m : Mod.mods) {
 				if(m.name().equalsIgnoreCase(mod)) {
-					String msg = String.format("`%s` by `%s`: [%s]", m.name(), m.getAuthor(), String.join(", ", m.getAliases()));
+					//The purpose of showing the path is for using it with LoadMod.
+					//Therefore, we can behave like LoadMod and replace my packages
+					//with the prefix specified in LoadMod.
+					String path = m.getClass().getName().replace("me.daniel.dsb.mods.", LoadMod.COREPREFIX);
+					//ModName by ModAuthor: [Aliases] - ModPath
+					String msg = String.format("`%s` by `%s`: [%s] - *`%s`*", m.name(), m.getAuthor(), String.join(", ", m.getAliases()), path);
 					channel.sendMessage(msg).queue();
 					return;
 				}
@@ -44,10 +49,10 @@ public final class ListMod extends Mod {
 		//Formats all mods into a single comma-separated string.
 		String list = String.join(", ", Mod.mods.stream().map(mod -> {
 			String name = mod.name();
-			if(!extra) return name;
+			if(!extra) return name; //Only use the mod's name.
 			String author = mod.getAuthor();
-			return String.format("%s(%s)", name, author);
+			return String.format("%s(%s)", name, author); //ModName(ModAuthor)
 		}).collect(Collectors.toList()));
-		channel.sendMessage("```" + list + "```").queue();
+		channel.sendMessage("(" + Mod.modsLoaded() + ")\r\n```" + list + "```").queue();
 	}
 }

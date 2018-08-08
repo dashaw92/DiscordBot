@@ -11,10 +11,12 @@ public final class TagMod extends Mod {
 
 	/*
 	 * Tag command. Allows saving content and recalling said content by id.
+	 * f = first tag
+	 * l = last tag
 	 */
 	
 	protected TagMod() {
-		super("t<a<title,content..>|!r<id>|c|id>", new String[] { "t" }, "Dan");
+		super("t<a<title,content..>|!r<id>|c|id|f|l>", new String[] { "t" }, "Dan");
 	}
 	
 	@Override
@@ -24,19 +26,37 @@ public final class TagMod extends Mod {
 			return;
 		}
 		
+		char first = args[0].toLowerCase().charAt(0);
+		
 		//Argument is the tag ID, look up and send the tag with that ID.
-		if(Character.isDigit(args[0].charAt(0))) {
-			int id = Integer.parseInt(args[0]);
+		if(Character.isDigit(first) || first == 'f' || first == 'l') {
+			int id;
+			//Get the (f)irst tag
+			if(first == 'f') {
+				if(!BotData.tags.isEmpty()) {
+					id = BotData.tags.firstKey();
+				} else id = -1;
+			} 
+			//Get the (l)ast tag
+			else if(first == 'l') {
+				if(!BotData.tags.isEmpty()) {
+					id = BotData.tags.lastKey();
+				} else id = -1;
+			} 
+			//Get the tag passed as an argument.
+			else id = Integer.parseInt(args[0]);
+			
 			if(!BotData.tags.containsKey(id)) {
 				channel.sendMessage("?").queue();
 				return;
 			}
+			
 			channel.sendMessage(BotData.tags.get(id).toString()).queue();
 			return;
 		}
 		
 		//Argument is 'c', send the current tag IDs.
-		if(args[0].toLowerCase().charAt(0) == 'c') {
+		if(first == 'c') {
 			if(BotData.tags.isEmpty()) {
 				//No tags exist.
 				channel.sendMessage("n").queue();
@@ -54,7 +74,7 @@ public final class TagMod extends Mod {
 		}
 		
 		//Remove tag command.
-		if(args[0].toLowerCase().charAt(0) == 'r') {
+		if(first == 'r') {
 			if(user.getIdLong() != BotData.getOwnerId()) {
 				channel.sendMessage("?").queue();
 				return;
@@ -62,12 +82,11 @@ public final class TagMod extends Mod {
 
 			int id = Integer.parseInt(args[1]);
 			BotData.tags.remove(id);
-			channel.sendMessage(":ok_hand:").queue();
 			return;
 		}
 		
 		//Add tag command
-		if(args[0].toLowerCase().charAt(0) == 'a') {
+		if(first == 'a') {
 			if(args.length < 3) {
 				channel.sendMessage("?").queue();
 				return;
@@ -81,7 +100,6 @@ public final class TagMod extends Mod {
 			}
 			String author = String.format("%s#%s", user.getName(), user.getDiscriminator());
 			BotData.tags.put(nextid, new Tag(title, author, content));
-			channel.sendMessage(":ok_hand:").queue();
 			return;
 		}
 		

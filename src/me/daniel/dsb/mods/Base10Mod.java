@@ -6,11 +6,11 @@ import net.dv8tion.jda.core.entities.User;
 public final class Base10Mod extends Mod {
 
 	/*
-	 * Base10 mod: Prints octal/hexadecimal input as decimal 
+	 * Base10 mod: Prints input as base 10.
 	 */
 	
 	public Base10Mod() {
-		super("10<x<n>|o<n>>", new String[] { "10" }, "Dan");
+		super("10<b<b,n>>", new String[] { "10" }, "Dan");
 	}
 	
 	@Override
@@ -21,19 +21,22 @@ public final class Base10Mod extends Mod {
 		}
 		
 		int base;
-		switch(args[0].toLowerCase().charAt(0)) {
-		case 'o':
-			base = 8;
-			break;
-		case 'x':
-			base = 16;
-			break;
-		default:
+		try {
+			base = Integer.parseInt(args[0]);
+		} catch(NumberFormatException e) {
 			channel.sendMessage("?").queue();
 			return;
 		}
+		
 		String coderaw = args[1];
-		int code = Integer.parseInt(coderaw, base);
+		int code;
+		try {
+			code = Integer.parseInt(coderaw, base);
+		} catch(NumberFormatException e) {
+			channel.sendMessage("?").queue();
+			return;
+		}
+		
 		channel.sendMessage("" + code).queue();
 	}
 }

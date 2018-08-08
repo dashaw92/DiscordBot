@@ -29,7 +29,6 @@ public final class DeltaMod extends Mod {
 				
 				if(BotData.DELTAS.containsKey(guildid)) {
 					BotData.DELTAS.remove(guildid);
-					channel.sendMessage(":ok_hand:").queue();
 				} else {
 					channel.sendMessage("?").queue();
 				}
