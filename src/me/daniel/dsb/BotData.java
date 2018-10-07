@@ -61,7 +61,7 @@ import me.daniel.dsb.mods.Mod;
 public final class BotData {
 	
 	//The root directory of all data files.
-	private static final File ROOT = new File(BotData.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "/data");
+	private static final File ROOT = new File(new File(BotData.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(), "/data");
 	//Main bot settings
 	private static final File CONFIG = new File(ROOT.getAbsolutePath() + "/cfg.txt");
 	//Delta command data

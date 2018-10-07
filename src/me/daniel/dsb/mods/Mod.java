@@ -24,9 +24,9 @@ public abstract class Mod {
 		//All mods. New mods should be added here.
 		Class<?>[] MOD_LIST = new Class<?>[] { AuthMod.class, Base10Mod.class, DataMod.class,
 											   DeltaMod.class, FormatMod.class, HelpMod.class,
-											   ListMod.class, LoadMod.class, OptionMod.class, 
-											   QuitMod.class, SaveMod.class, TagMod.class, 
-											   UnloadMod.class, UptimeMod.class
+											   ListMod.class, LoadMod.class, MusicMod.class, 
+											   OptionMod.class, QuitMod.class, SaveMod.class, 
+											   TagMod.class, UnloadMod.class, UptimeMod.class
 										 	 };
 
 		for (Class<?> c : MOD_LIST) {

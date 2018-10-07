@@ -5,11 +5,15 @@ import java.util.Arrays;
 import javax.security.auth.login.LoginException;
 
 import me.daniel.dsb.mods.Mod;
+import me.daniel.dsb.music.Music;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDA.Status;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.ReadyEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 
@@ -49,6 +53,9 @@ import net.dv8tion.jda.core.hooks.EventListener;
  */
 public final class SelfBot implements EventListener {
 	
+	private static Music music;
+	public static JDA jda;
+	
 	public static void main(String[] args) {
 		System.out.println("Loading bot data...");
 		BotData.init(); //Load up bot data
@@ -56,13 +63,13 @@ public final class SelfBot implements EventListener {
 		Mod.initMods(); //Register all mods
 		System.out.println("Starting bot.");
 		
-		JDA jda = null;
+		jda = null;
 		try {
 			jda = new JDABuilder(AccountType.BOT)
 					.setToken(BotData.TOKEN)
 					.addEventListener(new SelfBot())
-					.buildBlocking();
-		} catch(LoginException | InterruptedException ex) {
+					.build();
+		} catch(LoginException ex) {
 			System.err.println("Encountered a LoginException: ");
 			ex.printStackTrace();
 			return;
@@ -75,6 +82,7 @@ public final class SelfBot implements EventListener {
 			} catch (InterruptedException e) {}
 		}
 		
+		getMusic().disconnect();
 		System.out.println("Bot shutting down. Saving data...");
 		if(!BotData.save()) {
 			System.err.println("An error occurred while saving data on shutdown.");
@@ -82,8 +90,36 @@ public final class SelfBot implements EventListener {
 		System.out.println("Good bye.");
 	}
 	
+	public static Music getMusic() {
+		return music;
+	}
+	
 	@Override
 	public void onEvent(Event event) {
+		if(event instanceof ReadyEvent) {
+			music = new Music(event.getJDA().getGuildById(498239080518385705L));
+			return;
+		}
+		
+		if(event instanceof GuildVoiceLeaveEvent) {
+			GuildVoiceLeaveEvent ev = (GuildVoiceLeaveEvent)event;
+			if(ev.getChannelLeft().getIdLong() == getMusic().chan_id) {
+				if(ev.getChannelLeft().getMembers().size() < 2) {
+					System.out.println("Pausing music because no one is in the channel.");
+					getMusic().pause();
+				}
+			}
+			return;
+		}
+		
+		if(event instanceof GuildVoiceJoinEvent) {
+			GuildVoiceJoinEvent ev = (GuildVoiceJoinEvent)event;
+			if(ev.getChannelJoined().getIdLong() == getMusic().chan_id) {
+				getMusic().resume();
+			}
+			return;
+		}
+		
 		if(event instanceof MessageReceivedEvent) {
 			MessageReceivedEvent ev = (MessageReceivedEvent)event;
 			String msg = ev.getMessage().getContentDisplay();

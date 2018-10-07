@@ -22,6 +22,10 @@ public final class QuitMod extends Mod {
 		}
 
 		channel.getJDA().shutdown();
+		try {
+			Thread.sleep(30);
+		} catch(InterruptedException e) {}
+		System.exit(0);
 	}
 
 }
