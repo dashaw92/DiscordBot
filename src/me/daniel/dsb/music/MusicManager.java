@@ -3,6 +3,8 @@ package me.daniel.dsb.music;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -40,21 +42,21 @@ public class MusicManager {
 		if(!music_path.exists()) {
 			System.out.println("Missing music directory.");
 			music_path.mkdirs();
-			SelfBot.getMusic().disconnect();
-			return;
 		}
 		
 		Queue<AudioTrack> original = new LinkedList<>();
 		
 		List<File> children = null;
 		try {
-			children = Files.walk(music_path.toPath()).map(p -> p.toFile()).collect(Collectors.toList());
+			children = Files.walk(music_path.toPath()).map(Path::toFile).collect(Collectors.toList());
 		} catch(IOException e) {
 			System.err.println("Could not walk music directory:");
 			e.printStackTrace();
 			SelfBot.getMusic().disconnect();
 			return;
 		}
+		
+		Collections.shuffle(children);
 		
 		for(File file : children) {
 			if(file.getName().endsWith(".flac")) {

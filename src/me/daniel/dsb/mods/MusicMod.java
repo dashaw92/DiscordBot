@@ -1,5 +1,7 @@
 package me.daniel.dsb.mods;
 
+import java.util.Arrays;
+
 import me.daniel.dsb.BotData;
 import me.daniel.dsb.SelfBot;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -8,7 +10,7 @@ import net.dv8tion.jda.core.entities.User;
 public class MusicMod extends Mod {
 
 	public MusicMod() {
-		super("!μ<s|n|p|i>", new String[] { "μ" }, "Dan");
+		super("!μ<s|n|p|i|?>", new String[] { "μ" }, "Dan");
 	}
 
 	@Override
@@ -31,6 +33,11 @@ public class MusicMod extends Mod {
 		case 'i':
 			channel.sendMessage(SelfBot.getMusic().nowPlaying()).queue();
 			break;
+		case '?':
+			if(args.length < 2 || !SelfBot.getMusic().searchAndPlay(String.join(" ", Arrays.copyOfRange(args, 1, args.length)))) {
+				channel.sendMessage("?").queue();
+				return;
+			}
 		}
 	}
 

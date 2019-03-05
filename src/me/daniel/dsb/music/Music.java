@@ -27,6 +27,7 @@ public class Music {
 		
 		audio.setSendingHandler(mgr.sendHandler);
 		audio.openAudioConnection(vc);
+		if(vc.getMembers().size() < 2) pause();
 	}
 	
 	public void shuffle() {
@@ -53,9 +54,15 @@ public class Music {
 		return mgr.scheduler.currentTitle();
 	}
 	
+	public boolean searchAndPlay(String search) {
+		return mgr.scheduler.searchAndPlay(search);
+	}
+	
 	public void disconnect() {
 		pause();
-		audio.closeAudioConnection();
+		try {
+			audio.closeAudioConnection();
+		} catch(Exception ignored) {}
 		audio.setSendingHandler(null);
 	}
 }

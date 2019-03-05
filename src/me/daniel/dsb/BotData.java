@@ -103,10 +103,15 @@ public final class BotData {
 		for(File f : files.keySet()) {
 			if(f.exists()) continue;
 			try {
+				
 				if(files.get(f)) f.mkdirs();
-				else f.createNewFile();
+				else {
+					f.getParentFile().mkdirs();
+					f.createNewFile();
+				}
 			} catch(IOException e) {
 				System.err.println("\tCould not create a data file.");
+				e.printStackTrace();
 			}
 		}
 		
@@ -244,9 +249,8 @@ public final class BotData {
 					System.err.println("\tEncountered an invalid tag in database, skipping.");
 				}
 			}
-		} catch (IOException | ClassNotFoundException e) {
+		} catch (Exception e) {
 			System.err.println("\tCould not read tag database.");
-			e.printStackTrace();
 		}
 	}
 	

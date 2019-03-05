@@ -18,7 +18,7 @@ public final class HelpMod extends Mod {
 		if(cache.isEmpty()) {
 			StringBuilder sb = new StringBuilder();
 			for(Mod m : Mod.mods) {
-				sb.append(m.getHelp());
+				sb.append("`" + m.getHelp() + "`");
 				sb.append(" ");
 			}
 			cache = sb.toString().trim();

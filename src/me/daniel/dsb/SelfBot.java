@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDA.Status;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
@@ -98,6 +99,7 @@ public final class SelfBot implements EventListener {
 	public void onEvent(Event event) {
 		if(event instanceof ReadyEvent) {
 			music = new Music(event.getJDA().getGuildById(498239080518385705L));
+			event.getJDA().getPresence().setGame(Game.watching("https://discord.gg/nh9W2SB"));
 			return;
 		}
 		
@@ -105,7 +107,6 @@ public final class SelfBot implements EventListener {
 			GuildVoiceLeaveEvent ev = (GuildVoiceLeaveEvent)event;
 			if(ev.getChannelLeft().getIdLong() == getMusic().chan_id) {
 				if(ev.getChannelLeft().getMembers().size() < 2) {
-					System.out.println("Pausing music because no one is in the channel.");
 					getMusic().pause();
 				}
 			}
